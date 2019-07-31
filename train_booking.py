@@ -1,6 +1,7 @@
 from myutil import Semaphore
+from myutil import P, V
+from multiprocessing import Pool 
 
-import multiprocessing
 import time
 import sys
 
@@ -31,7 +32,7 @@ class Passenger:
         self.myseat = None
 
     def book(self, seatno):
-        if available_seats is False:
+        if len(available_seats) == 0:
             print('No seats available.\nPushing into wait queue')
             semaphore.queue.append(self)
             
