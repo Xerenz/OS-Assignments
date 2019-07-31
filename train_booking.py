@@ -1,5 +1,12 @@
-from myutil import Semaphore
-from myutil import P, V
+'''Understanding OS topic Semaphore
+using train-ticket booking program.
+
+The primary shared variable is the seatno
+No two process (Passenger booking) should
+access the same seatno simultaneosly'''
+
+from myutil import CountingSemaphore
+from myutil import UP, DOWN
 from multiprocessing import Pool 
 
 import time
@@ -8,10 +15,11 @@ import sys
 pno_base = 121800
 
 available_seats = [i for i in range(1, 10)]
+n = len(available_seats)
 
 booked_seats = []
 
-semaphore = Semaphore()
+semaphore = CountingSemaphore(n)
 
 def print_seats(seat_state):
     seat_state = [str(x) for x in seat_state]
@@ -32,9 +40,18 @@ class Passenger:
         self.myseat = None
 
     def book(self, seatno):
+        '''Booking the tickets is like
+performing DOWN or P(S) then
+selecting the seats (critical section) and then
+performing an UP or V(S). The main shared variable
+in this design is the seatno.'''
+
+        # changes required
+        DOWN(semaphore, self.book, seatno)
+        
         if len(available_seats) == 0:
-            print('No seats available.\nPushing into wait queue')
-            semaphore.queue.append(self)
+            print('''No seats available.
+                  You are pushed to wait-Queue''')
             
         elif seatno in available_seats:
             print('seat no.{} booked by passenger {}'.format(
@@ -59,6 +76,9 @@ class Passenger:
         print('Your ticket has been canceled')
 
         available_seats.insert(canceled - 1, canceled)
+
+        # changes required
+        UP(semaphore)
         
             
 if __name__ == '__main__':
@@ -71,3 +91,4 @@ if __name__ == '__main__':
     p1.cancel()
 
     print(available_seats)
+
