@@ -5,8 +5,7 @@ The primary shared variable is the seatno
 No two process (Passenger booking) should
 access the same seatno simultaneosly'''
 
-from myutil import CountingSemaphore
-from myutil import UP, DOWN
+from myutil import CountingSemaphore, UP, DOWN
 from multiprocessing import Pool 
 
 import time
@@ -22,8 +21,20 @@ booked_seats = []
 semaphore = CountingSemaphore(n)
 
 def print_seats(seat_state):
+    '''printing seats.'''
+    
     seat_state = [str(x) for x in seat_state]
     print('available seats : ', ' '.join(seat_state))
+
+def auto_book(process, seatno):
+    '''Auto book available seat for
+Passenger in the wait queue.'''
+
+    print('applying auto-booking')
+
+    if process:
+        process(seatno)
+    
 
 class Passenger:
 
@@ -47,7 +58,7 @@ performing an UP or V(S). The main shared variable
 in this design is the seatno.'''
 
         # changes required
-        DOWN(semaphore, self.book, seatno)
+        DOWN(semaphore, self.book)
         
         if len(available_seats) == 0:
             print('''No seats available.
@@ -70,6 +81,10 @@ in this design is the seatno.'''
             self.book(seatno)
 
     def cancel(self):
+        '''To cancel ticket booked by the Passenger.
+after cancel call UP and if there is waiting
+book ticket for that passenger.'''
+        
         cindex = booked_seats.index(self.myseat)
         canceled = booked_seats.pop(cindex)
 
@@ -78,17 +93,37 @@ in this design is the seatno.'''
         available_seats.insert(canceled - 1, canceled)
 
         # changes required
-        UP(semaphore)
+        process = UP(semaphore)
+        auto_book(process, canceled)
         
             
 if __name__ == '__main__':
-    p1 = Passenger('martin')
-    p2 = Passenger('aswathy')
+    passengers = ['hareesh',
+                  'aswathy',
+                  'elsa',
+                  'aporva',
+                  'martin',
+                  'alan',
+                  'rahul',
+                  'anees',
+                  'anoop',
+                  'hari',
+                  'asim',
+                  'jiju',
+                  'hithesh'] 
 
-    p1.book(3)
-    p2.book(3)
+    arrangement = {} # arrange by name, object pair
 
+    for seatno, passenger in enumerate(passengers):
+        seatno += 1
+        seatno %= 10
+
+        p = Passenger(passenger)
+        p.book(seatno)
+        
+        arrangement[passenger] = p
+
+    p1 = arrangement['martin']
     p1.cancel()
-
-    print(available_seats)
+    
 

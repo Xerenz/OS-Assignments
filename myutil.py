@@ -19,7 +19,7 @@ and a wait queue.'''
         self.queue = deque([])
 
 # for binary
-def P(mutex, process, args):
+def P(mutex, process):
     '''Down or wait operation
 check value and apply successful ops
 or usuccessful ops and process in wait-queue'''
@@ -27,7 +27,7 @@ or usuccessful ops and process in wait-queue'''
     if mutex.value == 1: 
         mutex.value = 0
     else:
-        mutex.queue.append((process, args))
+        mutex.queue.append(process)
 
 def V(mutex):
     '''Up or signal operation
@@ -40,16 +40,17 @@ and then perform process or take from queue.'''
         return mutex.queue.popleft()
 
 # for counting
-def DOWN(s, process, args):
+def DOWN(s, process):
     s.value -= 1
 
     if s.value < 0:
-        s.queue.append((process, args))
+        s.queue.append(process)
 
 def UP(s):
     s.value += 1
 
     if s.value < 0:
         return s.queue.popleft()
+    return None
                 
     
